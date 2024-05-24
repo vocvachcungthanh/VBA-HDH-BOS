@@ -7,8 +7,8 @@ Private ThuongKhoan As Double
 Private ThietLapKhoanID As Integer
 Private ThietLapKhoanNhanVienID As Integer
 Private ThietLapKhoanID_TheoBac As Integer
-Private NhiemVuId_Global As Integer
-Private CongViecId_Global As Integer
+Public NhiemVuId_Global As Integer
+Public CongViecId_Global As Integer
 Private AddBlock As Collection
 
 Private Sub btLamMoi_Click()
@@ -17,16 +17,14 @@ End Sub
 
 Private Sub btnCreateGrade_Click()
     ViTriID = 0
-    CongViecID = 0
     ThietLapKhoan_TheoBacID = 0
     On Error Resume Next
     ViTriID = Form_ThietLapLuongKhoan.cbbJobTitle.List(Form_ThietLapLuongKhoan.cbbJobTitle.ListIndex, 0)
-    On Error Resume Next
-    CongViecID = Form_ThietLapLuongKhoan.cbbKPIKhoan.List(Form_ThietLapLuongKhoan.cbbKPIKhoan.ListIndex, 0)
+
     On Error Resume Next
     ThietLapKhoan_TheoBacID = Form_ThietLapLuongKhoan.ListViewThongTinKhoan.SelectedItem.ListSubItems(4).Text
 
-    If ViTriID = 0 Or CongViecID = 0 Then
+    If ViTriID = 0 Or CongViecId_Global = 0 And NhiemVuId_Global = 0 Then
         Application.Assistant.DoAlert UniConvert("Thoong baso", "Telex"), UniConvert("Yeeu caafu chojn thieest laajp khoasn truwowsc.", "Telex"), 0, 0, 0, 0, 0
      Exit Sub
     End If
@@ -36,6 +34,7 @@ Private Sub btnCreateGrade_Click()
 End Sub
 
 Private Sub btnKPI_Click()
+
     If ValueTreeViewDepartment <> "" Then
         Call F_GetKPI
     End If
@@ -86,7 +85,6 @@ Private Sub cbbNhanVienKhoan_Click()
     NhanVienID = cbbNhanVienKhoan.value
 End Sub
 
-
 Private Sub ListViewThongTinKhoan_Click()
     ThietLapKhoanID_TheoBac = ListViewThongTinKhoan.SelectedItem.ListSubItems(4).Text
 End Sub
@@ -112,6 +110,9 @@ Private Sub TableObjective_Click()
         NhanVienID = .List(.ListIndex, 12)
 
         cbbNhanVienKhoan.Text = .List(.ListIndex, 13)
+        CongViecId_Global = .List(.ListIndex, 14)
+        NhiemVuId_Global = .List(.ListIndex, 15)
+
         Call F_CommissionTarget
     End With
 
@@ -164,10 +165,7 @@ Private Sub btnCapNhat_Click()
 
     TinhTheoPhongBanID = ValueTreeViewDepartment
     TinhTheoPhongBan = InputDepartment.Caption
-    If cbbKPIKhoan.Text <> "" Then
-        CongViecID = cbbKPIKhoan.value
-    End If
-
+    CongViecID = CongViecId_Global
     NgayApDung = Format(txtNgayApDung.Text, "yyyy-mm-dd")
     NgayHetHan = Format(txtNgayHetHan.Text, "yyyy-mm-dd")
 
@@ -185,7 +183,6 @@ Private Sub btnCapNhat_Click()
     Set dbConn = ConnectToDatabase
 
     If ThietLapKhoanID > 0 Then
-
         If NhiemVuId_Global > 0 Then
             Query = "UPDATE CV_ThietLapKhoan Set PhongBanID = " & PhongBanID & ", ViTriID = " & ViTriID & ", TinhTheoPhongBanID = " & TinhTheoPhongBanID & ", " & _
             "TinhTheoPhongBan = N'" & TinhTheoPhongBan & "', NhiemVuId = " & NhiemVuId_Global & ", NgayApDung = '" & NgayApDung & "', NgayHetHan = '" & NgayHetHan & "' WHERE ThietLapKhoanID = " & ThietLapKhoanID
@@ -218,12 +215,12 @@ Private Sub btnCapNhat_Click()
     Else
 
         If NhiemVuId_Global > 0 Then
-            Query = "INSERT INTO CV_ThietLapKhoan(PhongBanID, ViTriID, TinhTheoPhongBanID,TinhTheoPhongBan, NgayApDung, NgayHetHan,NhiemVuID ) " & _
-            "Select " & PhongBanID & ", " & ViTriID & ", '" & TinhTheoPhongBanID & "',N'" & TinhTheoPhongBan & "','" & NgayApDung & "', '" & NgayHetHan & "', '" & NhiemVuId_Global  & "'"  & _
+            Query = "INSERT INTO CV_ThietLapKhoan(PhongBanID, ViTriID, TinhTheoPhongBanID,TinhTheoPhongBan,NgayApDung, NgayHetHan, NhiemVuID ) " & _
+            "Select " & PhongBanID & ", " & ViTriID & ", '" & TinhTheoPhongBanID & "',N'" & TinhTheoPhongBan & "', '" & NgayApDung & "', '" & NgayHetHan & "','" & NhiemVuId_Global & "'" & _
             "WHERE Not EXISTS(Select ThietLapKhoanID from CV_ThietLapKhoan where ViTriID = " & ViTriID & " And NhiemVuID = " & NhiemVuId_Global & ")"
 
         Else
-            Query = "INSERT INTO CV_ThietLapKhoan(PhongBanID, ViTriID, TinhTheoPhongBanID,TinhTheoPhongBan, CongViecID, NgayApDung, NgayHetHan, ) " & _
+            Query = "INSERT INTO CV_ThietLapKhoan(PhongBanID, ViTriID, TinhTheoPhongBanID,TinhTheoPhongBan, CongViecID, NgayApDung, NgayHetHan ) " & _
             "Select " & PhongBanID & ", " & ViTriID & ", '" & TinhTheoPhongBanID & "',N'" & TinhTheoPhongBan & "', " & CongViecID & ", '" & NgayApDung & "', '" & NgayHetHan & "'" & _
             "WHERE Not EXISTS(Select ThietLapKhoanID from CV_ThietLapKhoan where ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & ")"
 
@@ -240,14 +237,25 @@ Private Sub btnCapNhat_Click()
 
             GhiChuKhoan = FontConverter(item.ListSubItems(3).Text, 2, 1)
 
+            If NhiemVuId_Global > 0 Then
+                Query = "Insert into CV_ThietLapKhoan_TheoBac (ThietLapKhoanID, TenBac, HeSo, GiaiKhoanTu, GhiChu) values ((Select top 1 ThietLapKhoanID from CV_thietLapKhoan where ViTriID = " & ViTriID & " And NhiemVuID = " & NhiemVuId_Global & "), N'" & TenBacKhoan & "', " & HeSoKhoan & ", " & GiaiKhoanTu & ", N'" & GhiChuKhoan & "')"
 
-            Query = "Insert into CV_ThietLapKhoan_TheoBac (ThietLapKhoanID, TenBac, HeSo, GiaiKhoanTu, GhiChu) values ((Select top 1 ThietLapKhoanID from CV_thietLapKhoan where ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & "), N'" & TenBacKhoan & "', " & HeSoKhoan & ", " & GiaiKhoanTu & ", N'" & GhiChuKhoan & "')"
+            Else
+                Query = "Insert into CV_ThietLapKhoan_TheoBac (ThietLapKhoanID, TenBac, HeSo, GiaiKhoanTu, GhiChu) values ((Select top 1 ThietLapKhoanID from CV_thietLapKhoan where ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & "), N'" & TenBacKhoan & "', " & HeSoKhoan & ", " & GiaiKhoanTu & ", N'" & GhiChuKhoan & "')"
+            End If
+
             Set Rs = dbConn.Execute(Query)
         Next item
 
-        Query = "INSERT INTO CV_ThietLapKhoan_NhanVien(ThietLapKhoanID, NhanVienID, DoiTuongID,DoiTuong,ChiTieuKhoan,LuongThuongDuKien) " & _
-        "Select ThietLapKhoanID, " & NhanVienID & ", '" & DoiTuongID & "',N'" & DoiTuong & "', '" & ChiTieuKhoan & "', '" & ThuongKhoan & "' FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & "" & _
-        " And Not EXISTS(Select ThietLapKhoanNhanVienID FROM CV_ThietLapKhoan_NhanVien WHERE NhanVienID = " & NhanVienID & " And ThietLapKhoanID in(Select ThietLapKhoanID FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & ") )"
+        If NhiemVuId_Global > 0 Then
+            Query = "INSERT INTO CV_ThietLapKhoan_NhanVien(ThietLapKhoanID, NhanVienID, DoiTuongID,DoiTuong,ChiTieuKhoan,LuongThuongDuKien) " & _
+            "Select ThietLapKhoanID, " & NhanVienID & ", '" & DoiTuongID & "',N'" & DoiTuong & "', '" & ChiTieuKhoan & "', '" & ThuongKhoan & "' FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And NhiemVuID = " & NhiemVuId_Global & "" & _
+            " And Not EXISTS(Select ThietLapKhoanNhanVienID FROM CV_ThietLapKhoan_NhanVien WHERE NhanVienID = " & NhanVienID & " And ThietLapKhoanID in(Select ThietLapKhoanID FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And NhiemVuID = " & NhiemVuId_Global & ") )"
+        Else
+            Query = "INSERT INTO CV_ThietLapKhoan_NhanVien(ThietLapKhoanID, NhanVienID, DoiTuongID,DoiTuong,ChiTieuKhoan,LuongThuongDuKien) " & _
+            "Select ThietLapKhoanID, " & NhanVienID & ", '" & DoiTuongID & "',N'" & DoiTuong & "', '" & ChiTieuKhoan & "', '" & ThuongKhoan & "' FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & "" & _
+            " And Not EXISTS(Select ThietLapKhoanNhanVienID FROM CV_ThietLapKhoan_NhanVien WHERE NhanVienID = " & NhanVienID & " And ThietLapKhoanID in(Select ThietLapKhoanID FROM CV_ThietLapKhoan WHERE ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & ") )"
+        End If
 
         Set Rs = dbConn.Execute(Query)
     End If
@@ -280,7 +288,6 @@ End Sub
 ' Xu ly kich vao vi tri nhan khoan
 Private Sub cbbJobTitle_Click()
     Call F_ViewBodyEmployye
-    '    Call F_CommissionTarget
 End Sub
 
 ' Xu ly khi click kpi Khoan
@@ -434,13 +441,16 @@ Private Function F_GetObjectiveID()
     DepartmentID = cbbDepartment.value
     Set dbConn = ConnectToDatabase
 
-    Query = "Select VT.Mavitri,VT.TenViTri,isnull(TLK_NV.ChiTieuKhoan,0) ChiTieuKhoan , isnull(TLK_NV.DoiTuong,'') DoiTuong,TLK.TinhTheoPhongBan,TLK.NgayApDung,TLK.NgayHetHan,  " & _
-    " TLK.TinhTheoPhongBanID,isnull(TLK_NV.DoiTuongID,'') DoiTuongID,TLK.ThietLapKhoanID, isnull(CV.CachLuongHoa, '') As CachLuongHoa, isnull(TLK_NV.ThietLapKhoanNhanVienID,0) ThietLapKhoanNhanVienID, isnull(TLK_NV.NhanVienID ,0) As NhanVienID,isnull(NV.Ho + ' ' + NV.Ten, ' ') As HoTen  " & _
+    Query = "Select VT.Mavitri,VT.TenViTri,isnull(TLK_NV.ChiTieuKhoan,0) ChiTieuKhoan , isnull(TLK_NV.DoiTuong,'') DoiTuong,TLK.TinhTheoPhongBan,TLK.NgayApDung,TLK.NgayHetHan, " & _
+    " TLK.TinhTheoPhongBanID,isnull(TLK_NV.DoiTuongID,'') DoiTuongID,TLK.ThietLapKhoanID, isnull(CV.CachLuongHoa, TVNV.TenMucTieu) As CachLuongHoa, " & _
+    "isnull(TLK_NV.ThietLapKhoanNhanVienID,0) ThietLapKhoanNhanVienID, isnull(TLK_NV.NhanVienID ,0) As NhanVienID,isnull(NV.Ho + ' ' + NV.Ten, ' ') As HoTen,isnull(CV.CongViecID, 0) As CongViecID,ISNULL(TLK.NhiemVuID, 0) As NhiemVuID " & _
     "FROM CV_ThietLapKhoan TLK " & _
     "LEFT JOIN CV_ThietLapKhoan_NhanVien TLK_NV on  TLK.ThietLapKhoanID = TLK_NV.ThietLapKhoanID " & _
     "LEFT JOIN DM_ViTri VT on VT.ViTriID = TLK.ViTriID " & _
     "LEFT JOIN CV_CongViec CV on CV.CongViecID = TLK.CongViecID " & _
     "LEFT JOIN NS_NhanVien NV on NV.NhanVienID = TLK_NV.NhanVienID " & _
+    "LEFT JOIN CV_NhiemVu CVNV on CVNV.NhiemVuID = TLK.NhiemVuID " & _
+    "LEFT JOIN CV_ThuVienNhiemVu TVNV on TVNV.ThuVienNhiemVuID = CVNV.ThuVienNhiemVuID " & _
     "WHERE TLK.PhongBanID in( Select Valu FROM LayDonViCon(" & DepartmentID & ")) And NV.NhanVienID > 0"
 
     Call ViewListBox(Query, TableObjective, dbConn)
@@ -463,12 +473,6 @@ Private Function F_GetAllDepartment()
 
     With cbbDepartment
         .Text = .List(0, 1)
-
-        If .Text <> "" Then
-            ' Goi danh sach chi tieu, danh vi tri theo ID
-            Call F_GetObjectiveID
-            Call F_GetPostionID
-        End If
     End With
 
 End Function
@@ -524,7 +528,7 @@ Private Function F_GetKPI()
     "inner join CV_ThuVienNhiemVu TVNV on TVNV.ThuVienNhiemVuID = NV.ThuVienNhiemVuID " & _
     "WHERE PhanLoaiCongViec = 'CV'  And Len(CachLuongHoa) > 0 And DM_ViTri.PhongBanID in (Select Value from string_split('" & ValueTreeViewDepartment & "', ','))) AA " & _
     "Group by CongViecID,CachLuongHoa,NhiemVuID,TenMucTieu having Count(PhongBanID) = (Select Count(Value)from string_split('" & ValueTreeViewDepartment & "', ','))"
-    Debug.Print Query
+
     Set Rs = dbConn.Execute(Query)
 
     If Not Rs.EOF And Not Rs.BOF Then
@@ -534,7 +538,7 @@ Private Function F_GetKPI()
     End If
 
     Set Rs = Nothing
-    '    Call ViewListBox(Query, cbbKPIKhoan, dbConn)
+    '   Call ViewListBox(Query, cbbKPIKhoan, dbConn)
     Call CloseDatabaseConnection(dbConn)
 End Function
 
@@ -552,7 +556,7 @@ Private Function F_ViewHeaderEmployee()
     PerformanceTarget = "Ch" & ChrW(7881) & " ti" & ChrW(234) & "u kho" & ChrW(225) & "n/ N" & ChrW(259) & "m"
     AnticipatedBonusCommission = "L" & ChrW(432) & ChrW(417) & "ng - th" & ChrW( _
     432) & ChrW(7903) & "ng khoán d" & ChrW(7921) & " ki" & ChrW(7871) & "n"
-    PaymentByKPI = "Kho" & ChrW(225) & "n theo KPI"
+    PaymentByKPI = "Kho" & ChrW(225) & "n theo"
     CSO = "Kho" & ChrW(225) & "n theo nh" & ChrW(226) & "n s" & ChrW(7921)
 
     With lvApplicableStaff.ColumnHeaders
@@ -562,8 +566,8 @@ Private Function F_ViewHeaderEmployee()
         .Add , , UniToWindows1258(AnticipatedBonusCommission), 160
         .Add , , UniToWindows1258(PaymentByKPI), 160
         .Add , , UniToWindows1258(CSO), 160
-
         .Add , , NhanVienID, 0
+
     End With
 End Function
 
@@ -575,10 +579,14 @@ Private Function F_ViewBodyEmployye()
     Set dbConn = ConnectToDatabase
 
     Query = "Select MaNhanVien,ho + ' ' + Ten As HoTen,ISNULL(TLK_NV.ChiTieuKhoan, 0) As ChiTieuKhoan, " & _
-    "ISNULL(TLK_NV.LuongThuongDuKien, 0) As LuongThuongKhoan,isnull(CV.CachLuongHoa, '') As KhoanTheoKPI,isnull(TLK_NV.DoiTuong,'') As KhoanTheoNhanSu, NV.NhanVienID,  Cv.CongViecID " & _
+    "ISNULL(TLK_NV.LuongThuongDuKien, 0) As LuongThuongKhoan,isnull(CV.CachLuongHoa, TVNV.TenMucTieu) As KhoanTheo,isnull(TLK_NV.DoiTuong,'') As KhoanTheoNhanSu, isNull(NV.NhanVienID,0) As NhanVienID, isNull(Cv.CongViecID,0) As CongViecID, isNull(TLK.NhiemVuID,0) As NhiemVuID " & _
     "FROM CV_ThietLapKhoan TLK LEFT JOIN CV_ThietLapKhoan_NhanVien TLK_NV on TLK.ThietLapKhoanID = TLK_NV.ThietLapKhoanID " & _
     "LEFT JOIN DM_ViTri VT on VT.ViTriID = TLK.ViTriID LEFT JOIN CV_CongViec CV on CV.CongViecID = TLK.CongViecID " & _
-    "LEFT JOIN NS_NhanVien NV on NV.NhanVienID = TLK_NV.NhanVienID WHERE TLK.ViTriID = " & cbbJobTitle.value & " And Nam = " & Sheet2.cbbNamSheetCongViec.value & " And len(Nv.NhanVienID) > 0 "
+    "LEFT JOIN NS_NhanVien NV on NV.NhanVienID = TLK_NV.NhanVienID " & _
+    "LEFT JOIN CV_NhiemVu CNV On CNV.NhiemVuID = TLK.NhiemVuID " & _
+    "LEFT JOIn CV_ThuVienNhiemVu TVNV on TVNV.ThuVienNhiemVuID = CNV.ThuVienNhiemVuID " & _
+    "WHERE TLK.ViTriID = " & cbbJobTitle.value & " And CNV.Nam = " & Sheet2.cbbNamSheetCongViec.value & " And len(Nv.NhanVienID) > 0 "
+
 
     Query2 = "Select NV.NhanVienID, ho + ' ' + Ten As HoTen FROM NS_NhanVien NV " & _
     "LEFT JOIN CV_ThietLapKhoan_NhanVien TLKNV ON NV.NhanVienID = TLKNV.NhanVienID " & _
@@ -621,9 +629,10 @@ Function F_ViewTableEmployye(Query, dbConn)
                 ListItem.SubItems(1) = UniToWindows1258(Rs.Fields("HoTen").value)
                 ListItem.SubItems(2) = FormatNumber(Rs.Fields("ChiTieuKhoan").value)
                 ListItem.SubItems(3) = FormatNumber(Rs.Fields("LuongThuongKhoan").value)
-                ListItem.SubItems(4) = UniToWindows1258(Rs.Fields("KhoanTheoKPI").value)
+                ListItem.SubItems(4) = UniToWindows1258(Rs.Fields("KhoanTheo").value)
                 ListItem.SubItems(5) = UniToWindows1258(Rs.Fields("KhoanTheoNhanSu").value)
                 ListItem.SubItems(6) = Rs.Fields("NhanVienID").value
+                ListItem.SubItems(7) = Rs.Fields("NhiemVuID").value
                 NhanVienApDung.Add Rs.Fields("CongViecID").value
             End If
             Rs.MoveNext
@@ -682,27 +691,9 @@ End Function
 
 ' Tinh Chi Tieu khoan theo thiet lap
 Public Function F_CommissionTarget()
-    Dim CongViecID As Integer
     Dim DoiTuong As String
-    Dim PL As String
-    Dim underscorePos As Integer
 
-    If ValueTreeKPI <> "" Then
-        underscorePos = InStr(ValueTreeKPI, "_")
-
-        If underscorePos > 0 Then
-            CongViecID = Trim(Left(ValueTreeKPI, underscorePos - 1))
-            PL = Trim(Mid(ValueTreeKPI, underscorePos + 1))
-
-            If PL = "KGI" Then
-                NhiemVuId_Global = Trim(Left(ValueTreeKPI, underscorePos - 1))
-            End If
-
-            If PL = "KPI" Then
-                CongViecId_Global = Trim(Left(ValueTreeKPI, underscorePos - 1))
-            End If
-        End If
-    End If
+    Call F_TC_NV
 
     DoiTuong = ValueTreeEtityId
 
@@ -718,9 +709,19 @@ Public Function F_CommissionTarget()
     Dim Data As Variant
 
     Set dbConn = ConnectToDatabase
-    Query = "Select NhanVienID, Sum(ChiTieuKhoan) As ChiTieuKhoan, Sum(ThuongKhoan) As ThuongKhoan " & _
-    "From CV_TinhThuongKhoan_TheoNam(" & NhanVienID & "," & PL & "," & DoiTuong & ", " & CongViecID & ") " & _
-    "Group by NhanVienID"
+
+    If CongViecId_Global > 0 Then
+        Query = "Select NhanVienID, Sum(ChiTieuKhoan) As ChiTieuKhoan, Sum(ThuongKhoan) As ThuongKhoan " & _
+        "From CV_TinhThuongKhoan_TheoNam(" & NhanVienID & ",'KPI'," & DoiTuong & ", " & CongViecId_Global & ") " & _
+        "Group by NhanVienID"
+    End If
+
+    If NhiemVuId_Global > 0 Then
+        Query = "Select NhanVienID, Sum(ChiTieuKhoan) As ChiTieuKhoan, Sum(ThuongKhoan) As ThuongKhoan " & _
+        "From CV_TinhThuongKhoan_TheoNam(" & NhanVienID & ",'KGI'," & DoiTuong & ", " & NhiemVuId_Global & ") " & _
+        "Group by NhanVienID"
+    End If
+
     Set Rs = dbConn.Execute(Query)
 
     If Not Rs.EOF And Not Rs.BOF Then
@@ -757,6 +758,9 @@ Private Function F_Reset()
     ListViewThongTinKhoan.ListItems.Clear
     ThietLapKhoanID_TheoBac = 0
     cbbNhanVienKhoan = ""
+    ValueTreeKPI = ""
+    CongViecId_Global = 0
+    NhiemVuId_Global = 0
 End Function
 
 Public Function F_DELETE()
@@ -797,25 +801,15 @@ End Function
 Sub Load_Data_Listview_ThongTinKhoan_TheoBac()
     ListViewThongTinKhoan.ListItems.Clear
     Dim TT_BacKhoan As Variant
-    Dim Cn As ADODB.Connection
-    Dim StrCnn As String
-    Dim Rs As ADODB.Recordset
+    Dim dbConn As Object
+    Dim Rs As Object
+    Dim Query As String
 
-    StrCnn = KetNoiMayChu_KhachHang
-    Dim SQLStr As String
-    Dim CongViecID As Integer
-    Dim ViTriID As Integer
-    'ThietLapKhoanID = 5
-    ViTriID = cbbJobTitle.List(cbbJobTitle.ListIndex, 0)
-    CongViecID = cbbKPIKhoan.Caption
-    SQLStr = "Select TenBac, Heso,GiaiKhoanTu, GhiChu, ThietLapKhoan_TheoBacID  " & _
-    "from CV_ThietLapKhoan_TheoBac where ThietLapKhoanID in (Select top 1 ThietLapKhoanID from CV_thietLapKhoan where CongViecID = " & CongViecID & " And VitriID = " & ViTriID & ") " & _
-    " order by GiaiKhoanTu asc ;"
+    Set dbConn = ConnectToDatabase
 
-    Set Cn = New ADODB.Connection
-    Cn.Open StrCnn
-    Set Rs = New ADODB.Recordset
-    Rs.Open SQLStr, Cn, adOpenStatic
+    Query = "Select TenBac, Heso,GiaiKhoanTu, GhiChu, ThietLapKhoan_TheoBacID FROM CV_ThietLapKhoan_TheoBac WHERE ThietLapKhoanID = " & ThietLapKhoanID
+
+    Set Rs = dbConn.Execute(Query)
 
     If Not Rs.EOF Then
         TT_BacKhoan = Rs.GetRows()
@@ -842,52 +836,24 @@ Sub Load_Data_Listview_ThongTinKhoan_TheoBac()
     F_CommissionTarget
 End Sub
 
-Sub CapNhat_ThietLapKhoan()
-    Dim PhongBanID As Integer
-    Dim ViTriID As Variant
-    Dim TinhTheoPhongBanID As String
-    Dim CongViecID As Variant
-    Dim NgayApDung As String
-    Dim NgayHetHan As String
-    Dim DoiTuongID As String
-    Dim DoiTuong As String
-    Dim TinhTheoPhongBan As String
+Function F_TC_NV()
+    Dim PL As String
+    Dim underscorePos As Integer
 
-    PhongBanID = cbbDepartment.value
-    If cbbJobTitle.Text <> "" Then
-        ViTriID = cbbJobTitle.value
+    If ValueTreeKPI <> "" Then
+        underscorePos = InStr(ValueTreeKPI, "_")
+
+        If underscorePos > 0 Then
+            PL = Trim(Mid(ValueTreeKPI, underscorePos + 1))
+
+            If PL = "KGI" Then
+                NhiemVuId_Global = Trim(Left(ValueTreeKPI, underscorePos - 1))
+            End If
+
+            If PL = "KPI" Then
+                CongViecId_Global = Trim(Left(ValueTreeKPI, underscorePos - 1))
+            End If
+        End If
     End If
-
-    TinhTheoPhongBanID = ValueTreeViewDepartment
-    TinhTheoPhongBan = InputDepartment.Caption
-    If cbbKPIKhoan.Text <> "" Then
-        CongViecID = cbbKPIKhoan.value
-    End If
-
-    NgayApDung = Format(txtNgayApDung.Text, "yyyy-mm-dd")
-    NgayHetHan = Format(txtNgayHetHan.Text, "yyyy-mm-dd")
-
-    DoiTuongID = ValueTreeEtityId
-    DoiTuong = inputEntity.Caption
-
-    If F_CheckInfoEmpty(PhongBanID, ViTriID, TinhTheoPhongBanID, CongViecID, NgayApDung, DoiTuongID) = True Then
-     Exit Sub
-    End If
-    Dim dbConn As Object
-    Dim Query As String
-    Dim Rs As Object
-
-    Set dbConn = ConnectToDatabase
-
-    Query = "INSERT INTO CV_ThietLapKhoan(PhongBanID, ViTriID, TinhTheoPhongBanID,TinhTheoPhongBan, CongViecID, NgayApDung, NgayHetHan) " & _
-    "Select " & PhongBanID & ", " & ViTriID & ", '" & TinhTheoPhongBanID & "',N'" & TinhTheoPhongBan & "', " & CongViecID & ", '" & NgayApDung & "', '" & NgayHetHan & "'" & _
-    "WHERE Not EXISTS(Select ThietLapKhoanID from CV_ThietLapKhoan where ViTriID = " & ViTriID & " And CongViecID = " & CongViecID & ")"
-
-    Set Rs = dbConn.Execute(Query)
-    Set Rs = Nothing
-    Call CloseDatabaseConnection(dbConn)
-
-End Sub
-
-
+End Function
 
