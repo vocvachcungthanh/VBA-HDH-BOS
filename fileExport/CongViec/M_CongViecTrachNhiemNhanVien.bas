@@ -169,11 +169,7 @@ Function F_HeaderTableCongViecTrachNhiemTheoViTri()
       .Add , , UniToWindows1258(DonViLuongHoa), 100
       .Add , , UniToWindows1258(DinhMucToiThieu), 100
       .Add , , UniToWindows1258(DinhMucYeuCau), 100
-      If ValueNam Then
-         .Add , , UniToWindows1258(DaLap), 100
-      Else
-         .Add , , UniToWindows1258(DaLap), 0
-      End If
+      .Add , , UniToWindows1258(DaLap), 0
       .Add , , UniToWindows1258(PhuongThucTinh), 100
       .Add , , UniToWindows1258(HeSo), 70
       .Add , , UniToWindows1258(GhiChu), 100
@@ -508,8 +504,8 @@ Function F_CapNhatThietLapLanDau()
    For Each Item In TableCongViecTrachNhiemTheoViTri.ListItems
       If Item.ListSubItems(8) > 0 And Item.Checked Then
          For i = 0 To 12
-            Query = "INSERT INTO CV_TrachNhiem_TheoViTri(CongViecID,NhanVienID,Thang) " & _
-            "VALUES(" & Item.ListSubItems(8) & ", " & NhanVienID_Global & ", " & i & ")"
+            Query = "INSERT INTO CV_TrachNhiem_TheoViTri(CongViecID,NhanVienID,Thang, Nam) " & _
+            "VALUES(" & Item.ListSubItems(8) & ", " & NhanVienID_Global & ", " & i & ", " & SelectNam.value & ")"
 
             Set Rs = dbConn.Execute(Query)
          Next i
@@ -569,6 +565,7 @@ End Function
 
 Function F_ViewTableCvTracNhiemTheoVt(Query, dbConn)
    On Error Resume Next
+
    If Not dbConn Is Nothing Then
       Dim Rs As Object
       Dim i As Integer
@@ -827,7 +824,7 @@ Function F_FormCapNhatThongTinChiTiet()
 
    If ValueNam = True Then
       Dim i As Integer
-      Query = "DELETE FROM CV_TrachNhiem_TheoViTri WHERE TrachNhiemTheoViTriID =" & TrachNhiemTheoViTriID
+      Query = "DELETE FROM CV_TrachNhiem_TheoViTri WHERE NhanVienID =" & NhanVienID_Global & " And CongViecID = " & CongViecID_Global & " And Nam = " & NamLap & ""
       On Error Resume Next
       Set Rs = dbConn.Execute(Query)
       Set Rs = Nothing
@@ -858,16 +855,28 @@ Function F_FormCapNhatThongTinChiTiet()
 
       Set Rs = dbConn.Execute(Query)
       Set Rs = Nothing
+      Dim Message As String
+      Message = "Th" & ChrW(225) & "ng 12 s" & ChrW(7869) & " " & ChrW(273) & ChrW(432) & ChrW(7907) & "c c" & ChrW(7853) & "p nh" & ChrW(7853) & "t l" & ChrW(7841) & "i "
+      Dim msgValue As VbMsgBoxResult
+      msgValue = Application.Assistant.DoAlert(UniConvert("Carnh baso", "Telex"), UniConvert(Message, "Telex"), msoAlertButtonYesNo, msoAlertIconWarning, 0, 0, 0)
 
-      CreateObject("WScript.Shell").Popup "Th" & ChrW(225) & "ng 12 s" & ChrW(7869) & " " & ChrW(273) & ChrW(432) & ChrW(7907) & "c c" & ChrW(7853) & "p nh" & ChrW(7853) & "t l" & ChrW(7841) & "i ", , "BOS Th" & ChrW(244) & "ng b" & ChrW(225) & "o", 0 + 0
+      If msgValue = vbYes Then
+         Query = "Update CV_TrachNhiem_TheoViTri Set DinhMucYeuCau = " & _
+         "(Select top 1 DinhMucYeuCau from CV_TrachNhiem_TheoViTri KHN WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID  And Thang = 0) - " & _
+         "(Select Sum(DinhMucYeuCau) from CV_TrachNhiem_TheoViTri KHT WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID And Thang between 1 And 11) " & _
+         "WHERE Nam = " & NamLap & " And CongViecID = " & CongViecID_Global & " And NhanVienID = " & NhanVienID_Global & " And Thang = 12"
 
-      Query = "Update CV_TrachNhiem_TheoViTri Set DinhMucYeuCau = " & _
-      "(Select top 1 DinhMucYeuCau from CV_TrachNhiem_TheoViTri KHN WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID  And Thang = 0) - " & _
-      "(Select Sum(DinhMucYeuCau) from CV_TrachNhiem_TheoViTri KHT WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID And Thang between 1 And 11) " & _
-      "WHERE Nam = " & NamLap & " And CongViecID = " & CongViecID_Global & " And NhanVienID = " & NhanVienID_Global & " And Thang = 12"
+         Set Rs = dbConn.Execute(Query)
+         Set Rs = Nothing
 
-      Set Rs = dbConn.Execute(Query)
-      Set Rs = Nothing
+         Query = "Update CV_TrachNhiem_TheoViTri Set DinhMucToiThieu = " & _
+         "(Select top 1 DinhMucToiThieu from CV_TrachNhiem_TheoViTri KHN WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID  And Thang = 0) - " & _
+         "(Select Sum(DinhMucToiThieu) from CV_TrachNhiem_TheoViTri KHT WHERE Nam = CV_TrachNhiem_TheoViTri.Nam And CongViecID = CV_TrachNhiem_TheoViTri.CongViecID And NhanVienID = CV_TrachNhiem_TheoViTri.NhanVienID And Thang between 1 And 11) " & _
+         "WHERE Nam = " & NamLap & " And CongViecID = " & CongViecID_Global & " And NhanVienID = " & NhanVienID_Global & " And Thang = 12"
+
+         Set Rs = dbConn.Execute(Query)
+         Set Rs = Nothing
+      End If
    End If
 
    Call CloseDatabaseConnection(dbConn)
@@ -964,8 +973,11 @@ Function F_DongBoVoiKheHoachNV()
 
    Set dbConn = ConnectToDatabase
 
-   Query = "Select isNull(KeHoachDoanhThuNv,0) As KeHoachDoanhThuNv FROM KeHoachDoanhThuNv WHERE PhongBanID = " & SelectPhongBan.value & " And Nam = " & SelectNam.value & " And NhanVienID = " & NhanVienID_Global
-
+   If ValueNam Then
+      Query = "Select isNull(KeHoachDoanhThuNv,0) As KeHoachDoanhThuNv FROM KeHoachDoanhThuNv WHERE PhongBanID = " & SelectPhongBan.value & " And Nam = " & SelectNam.value & " And NhanVienID = " & NhanVienID_Global
+   Else
+      Query = "Select isNull(TienThang" & Thang & " ,0) As TienThang FROM KeHoachPhanBoNv WHERE PhongBanID = " & SelectPhongBan.value & " And Nam = " & SelectNam.value & " And NhanVienID = " & NhanVienID_Global
+   End If
 
    Set Rs = dbConn.Execute(Query)
 
@@ -974,11 +986,7 @@ Function F_DongBoVoiKheHoachNV()
    Else
       KD = Rs.GetRows()
 
-      If IsArrayEmpty(KD) Or UBound(KD, 2) < 1 Then
-       Exit Function
-      Else
-         InputDinhMucYeuCau.value = KD(0, 0)
-      End If
+      InputDinhMucYeuCau.value = KD(0, 0)
    End If
 
    Call CloseDatabaseConnection(dbConn)
