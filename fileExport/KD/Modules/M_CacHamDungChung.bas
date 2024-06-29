@@ -1,3 +1,4 @@
+Attribute VB_Name = "M_CacHamDungChung"
 Sub BatLimit()
     Application.ScreenUpdating = False
     Application.EnableEvents = False
@@ -63,17 +64,31 @@ Sub ruller()
 End Sub
 
 Sub hideall()
-    '    Workbooks("KD.xlsb").Activate
-    '    Application.ExecuteExcel4Macro "Show.toolbar(""Ribbon"",False)"
-    '    ActiveWindow.DisplayHorizontalScrollBar = True
-    '    ActiveWindow.DisplayVerticalScrollBar = True
-    '    ActiveWindow.DisplayHeadings = False
-    '    ActiveWindow.DisplayWorkbookTabs = False
-    '    Application.DisplayFormulaBar = False
-    '    ActiveWindow.DisplayGridlines = False
-    '    ActiveWindow.DisplayOutline = False
-    '    ActiveWindow.DisplayZeros = True
-    '    Application.ScreenUpdating = False
+    Dim wb As Workbook
+    Set wb = Workbooks("KD.xlsb")
+    
+    ' Kiem tra Workbook co ton ai khong
+    If Not wb Is Nothing Then
+        ' Tat thanh Ribbon
+        Application.ExecuteExcel4Macro "Show.toolbar(""Ribbon"", False)"
+        
+        ' cau hinh thiet lap khac cua sua so  Workbook
+        With wb.Windows(1)
+            .DisplayHorizontalScrollBar = True
+            .DisplayVerticalScrollBar = True
+            .DisplayHeadings = False
+            .DisplayWorkbookTabs = False
+            .DisplayGridlines = False
+            .DisplayOutline = False
+            .DisplayZeros = True
+        End With
+        
+        ' tat thanh cong cu cong thuc
+        Application.DisplayFormulaBar = False
+        
+        ' tat tinh nang cap nhat man hinh de tang to do xu ly
+        Application.ScreenUpdating = False
+    End If
 End Sub
 
 Sub showall()
@@ -164,7 +179,7 @@ Private Sub ThucHienTruyVan()
 
     StrCnn = KetNoiMayChu_KhachHang
     Dim SQLStr As String
-    SQLStr = Sheets("Danh s√°ch ??n v?").Range("A1").Value
+    SQLStr = Sheets("Danh s·ch ??n v?").Range("A1").Value
 
     Set Cn = New ADODB.Connection
     Cn.Open StrCnn
@@ -172,12 +187,12 @@ Private Sub ThucHienTruyVan()
 
     Dim k As Integer
     For Each Field In Rs.Fields
-        Worksheets("Danh s√°ch ??n v?").Range("a2").Offset(0, k).Value = Field.Name
+        Worksheets("Danh s·ch ??n v?").Range("a2").Offset(0, k).Value = Field.Name
         k = k + 1
 
     Next Field
 
-    Worksheets("Danh s√°ch ??n v?").Range("a3").CopyFromRecordset Rs
+    Worksheets("Danh s·ch ??n v?").Range("a3").CopyFromRecordset Rs
 
     Cn.Close
     Set Rs = Nothing
@@ -380,7 +395,7 @@ Public Sub F_ClearAll()
         End If
     End With
 
-    F_ClearBaoCaoKinhDoanh Sheet33, "Data SS KH DVKD"
+    F_ClearBaoCaoKinhDoanh Sheet23, "Data SS KH DVKD"
 
     F_ClearBaoCaoKinhDoanh Sheet35, "Data SS KH NVKD"
     F_ClearBaoCaoKinhDoanh Sheet37, "Data SS KH KH"
@@ -415,12 +430,12 @@ Public Sub F_ClearAll()
 End Sub
 
 Sub ClearSCTBH()
-    On Error Resume Next
+'    On Error Resume Next
     Dim dongCuoi As Long
     With Sheet24
         .Select
         .Range("G1").Clear
-        dongCuoi = tinhdongcuoi("A4:B1048576")
+        dongCuoi = Abs(tinhdongcuoi("A4:B1048576"))
         If dongCuoi > 3 Then
             Workbooks("KD.xlsb").Sheets("Data").Range("A4:AE" & dongCuoi).Clear
             ActiveSheet.ListObjects("DataSCTBH").Resize Range("$A$3:$AE$4")
@@ -508,10 +523,10 @@ Function ExtractC12FromString(inputString As String) As String
     Dim outputString As String
     Dim colonPosition As Integer
 
-    ' T√¨m v? tr√≠ d?u hai ch?m (:) trong chu?i
+    ' TÏm v? trÌ d?u hai ch?m (:) trong chu?i
     colonPosition = InStr(1, inputString, ":")
 
-    ' Tr√≠ch xu?t k√Ω t? "C12" t? chu?i ban d?u
+    ' TrÌch xu?t k˝ t? "C12" t? chu?i ban d?u
     If colonPosition > 0 Then
         outputString = Left(inputString, colonPosition - 1)
         ExtractC12FromString = outputString
@@ -523,10 +538,10 @@ Function ExtractdongcuoiFromString(inputString As String) As String
     Dim outputString As String
     Dim colonPosition As Integer
 
-    ' T√¨m v? tr√≠ d?u hai ch?m (:) trong chu?i
+    ' TÏm v? trÌ d?u hai ch?m (:) trong chu?i
     colonPosition = InStr(1, inputString, ":")
 
-    ' Tr√≠ch xu?t k√Ω t? "C12" t? chu?i ban d?u
+    ' TrÌch xu?t k˝ t? "C12" t? chu?i ban d?u
     If colonPosition > 0 Then
         outputString = Right(inputString, Len(inputString) - colonPosition)
         ExtractdongcuoiFromString = outputString
@@ -579,7 +594,7 @@ End Sub
 
 Sub TatTatCaDulieuTu_CSDL()
     On Error Resume Next
-    Dim Nam As String
+    Dim Nam As Integer
     Dim Query As String
     Dim NguoiDangNhap
     Dim dongCuoi
@@ -734,227 +749,36 @@ Sub TatTatCaDulieuTu_CSDL()
 
 
     Call ComboBox_SoSanhKeHoachcua_NVKD
-    Set wSheet = Sheet32
-    With wSheet
-        TenPhongBan = .Range("E5").Value
-    End With
-    Set wSheet = Nothing
-
-    Set wSheet = Sheet33
-    With wSheet
+    With Sheet32
         .Select
-
-        Query = "Select Isnull((Select top 1 PhongBanID from PhongBan where TenPhongBan = N'" & TenPhongBan & "'),9999 )"
-
-        Call viewSheet(Query, Sheet33, "A1", dbConn)
-
-        PhongBanID = .Range("A1").Value
-
-        ' Bao cao ngay >> Tu o B12
-        Query = "Select STT, NgayThang, Thu, Tuan, Thang, Quy, KY, KeHoach_Ngay , DoanhSoBan_Ngay , TyLeThucHien, (KeHoach_Ngay - DoanhSoBan_Ngay) As Thieu  " & _
-        "from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay"
-
-        Sheet32.Range("B12:L500").Clear
-        Call viewSheet(Query, Sheet33, "B12", dbConn)
-
-        ' Bao c√°o tuan >> Tu o X12
-        Query = "Select Tuan, (Select top 1 Thang from DM_NgayThang where Year(NgayThang) = " & Nam & " And DM_NgayThang.Tuan = BC_Ngay.Tuan order by NgayThang ) Thang, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan,  " & _
-        " Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay " & _
-        "Group by Tuan "
-
-        Call viewSheet(Query, Sheet33, "X12", dbConn)
-
-        ' Bao cao Thang >> Tu o AQ12
-
-        Query = "Select Thang, Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay " & _
-        "Group by Thang, Quy "
-        Call viewSheet(Query, Sheet33, "AQ12", dbConn)
-
-        ' Bao cao Quy >> Tu o BJ12
-        Query = "Select Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay " & _
-        "Group by Quy"
-
-        Call viewSheet(Query, Sheet33, "BI12", dbConn)
-
-        ' Bao cao Ky >> Tu o BI20
-
-        Query = "Select Ky, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay " & _
-        "Group by Ky"
-        Call viewSheet(Query, Sheet33, "BI20", dbConn)
-
-        ' Bao cao Nam >> Tu o BI26
-
-        Query = "Select '" & Nam & "' As Nam, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_DVKD_TheoNgay(" & Nam & ", " & PhongBanID & ") BC_Ngay "
-
-        Call viewSheet(Query, Sheet33, "BI26", dbConn)
+        TenPhongBan = .Range("E5").Value
+        Nam = .Range("F5").Value
     End With
-    Set wSheet = Nothing
+    
+    Query = "Select Isnull((Select top 1 PhongBanID from PhongBan where TenPhongBan = N'" & TenPhongBan & "'),9999 )"
+    Call GenerateQueryAndCallViewSheet("BaoCaoDoanhThu_DVKD_TheoNgay", Nam, Sheet23, Query)
     Dim MaNhanVien
 
     Set wSheet = Sheet34
     With wSheet
         MaNhanVien = .Range("E5").Value
     End With
-    Set wSheet = Nothing
-    ' Xac dinh NhanVienID
-    Set wSheet = Sheet35
-    With wSheet
-        .Select
-
-        Query = "Select Isnull((Select top 1 NhanvienID from Ns_NhanVien where MaNhanVien = N'" & MaNhanVien & "'),9999 )"
-        Call viewSheet(Query, Sheet35, "A1", dbConn)
-
-        NhanVienID = .Range("A1").Value
-
-        ' Bao cao ngay >> Tu o B12
-
-        Query = "Select STT, NgayThang, Thu, Tuan, Thang, Quy, Ky, KeHoach_Ngay , DoanhSoBan_Ngay , TyLeThucHien,(KeHoach_Ngay - DoanhSoBan_Ngay) As Thieu  " & _
-        "from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay"
-        Call viewSheet(Query, Sheet35, "B12", dbConn)
-
-        ' Bao c√°o tuan >> Tu o X12
-
-        Query = "Select Tuan, (Select top 1 Thang from DM_NgayThang where Year(NgayThang) = " & Nam & " And DM_NgayThang.Tuan = BC_Ngay.Tuan order by NgayThang ) Thang, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan,  " & _
-        " Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay " & _
-        "Group by Tuan "
-
-        Call viewSheet(Query, Sheet35, "X12", dbConn)
-
-        ' Bao cao Thang >> Tu o AQ12
-
-        Query = "Select Thang, Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay " & _
-        "Group by Thang, Quy "
-        Call viewSheet(Query, Sheet35, "AQ12", dbConn)
-
-
-        Query = "Select Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay " & _
-        "Group by Quy"
-        Call viewSheet(Query, Sheet35, "BI12", dbConn)
-
-        ' Bao cao Ky >> Tu o BI20
-
-        Query = "Select Ky, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay " & _
-        "Group by Ky"
-        Call viewSheet(Query, Sheet35, "BI20", dbConn)
-
-
-        Query = "Select '" & Nam & "' As Nam, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_NhanVienKD_TheoNgay(" & Nam & ", " & NhanVienID & ") BC_Ngay "
-
-        Call viewSheet(Query, Sheet35, "BI26", dbConn)
+    With Sheet34
+        MaNhanVien = .Range("E5").Value
+        Nam = .Range("G5").Value
     End With
-    Set wSheet = Nothing
 
-    Set wSheet = Sheet37
-    With wSheet
+    Query = "Select Isnull((Select top 1 NhanvienID from Ns_NhanVien where MaNhanVien = N'" & MaNhanVien & "'),9999 )"
+    Call GenerateQueryAndCallViewSheet("BaoCaoDoanhThu_NhanVienKD_TheoNgay", Nam, Sheet35, Query)
+    With Sheet37
         .Select
-        Dim MaKhachHang As String
-        Dim KhachHangID As Long
-        Call ComboBox_KhachHang_Nam
         MaKhachHang = .Range("J7").Value
-
-        ' Xac dinh KhachHangID
-
-        Query = "Select Isnull((Select top 1 KhachHangID from KH_KhachHang where MaKhachHang = N'" & MaKhachHang & "'),9999 )"
-        Call viewSheet(Query, Sheet37, "A1", dbConn)
-        KhachHangID = .Range("A1").Value
-
-        ' MsgBox MaNhanVien & " >>>>> " & KhachHangID
-        If KhachHangID = 9999 Then
-            ' MsgBox "Khach Hang nay khong ton tai. Vui long kiem tra lai"
-        End If
-
-        ' Bao cao ngay >> Tu o B12
-
-        Query = "Select STT, NgayThang, Thu, Tuan, Thang, Quy, Ky, KeHoach_Ngay , DoanhSoBan_Ngay , TyLeThucHien, (KeHoach_Ngay - DoanhSoBan_Ngay) As Thieu  " & _
-        "from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay"
-        Call viewSheet(Query, Sheet37, "B12", dbConn)
-
-        ' Bao c√°o tuan >> Tu o X12
-        Query = "Select Tuan, (Select top 1 Thang from DM_NgayThang where Year(NgayThang) = " & Nam & " And DM_NgayThang.Tuan = BC_Ngay.Tuan order by NgayThang ) Thang, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan,  " & _
-        " Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay " & _
-        "Group by Tuan "
-        Call viewSheet(Query, Sheet37, "X12", dbConn)
-
-        ' Bao cao Thang >> Tu o AQ12
-
-        Query = "Select Thang, Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay " & _
-        "Group by Thang, Quy "
-        Call viewSheet(Query, Sheet37, "AQ12", dbConn)
-
-        ' Bao cao Quy >> Tu o BJ12
-
-        Query = "Select Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay " & _
-        "Group by Quy"
-        Call viewSheet(Query, Sheet37, "BI12", dbConn)
-
-        ' Bao cao Ky >> Tu o BI20
-        Query = "Select Ky, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay " & _
-        "Group by Ky"
-        Call viewSheet(Query, Sheet37, "BI20", dbConn)
-
-        ' Bao cao Nam >> Tu o BI26
-        Query = "Select '" & Nam & "' As Nam, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from BaoCaoDoanhThu_KhachHang_TheoNgay(" & Nam & ", " & KhachHangID & ") BC_Ngay "
-
-        Call viewSheet(Query, Sheet37, "BI26", dbConn)
+        Nam = .Range("L7").Value
+        
     End With
-    Set wSheet = Nothing
+    
+    Query = "Select Isnull((Select top 1 KhachHangID from KH_KhachHang where MaKhachHang = N'" & MaKhachHang & "'),9999 )"
+    Call GenerateQueryAndCallViewSheet("BaoCaoDoanhThu_KhachHang_TheoNgay", Nam, Sheet37, Query)
 
     'Dong Ket noi
     Call CloseDatabaseConnection(dbConn)
@@ -981,7 +805,7 @@ Sub F_TaiTatCaDuLieu()
         Selection.NumberFormat = "@"
 
         dongCuoi = tinhdongcuoi("A3:A1000000")
-        .Range("DataSCTBH[[#Headers],[M√£ kh√°ch h√†ng]]").Select
+        .Range("DataSCTBH[[#Headers],[M„ kh·ch h‡ng]]").Select
         Rows("2:2").RowHeight = 46.5
     End With
     Set wSheet = Nothing
@@ -1005,151 +829,152 @@ Sub ApDungNhan()
     Call SlicerCaption
     Call ThongBao_ThanhCong
 End Sub
+
 Sub SlicerCaption()
     '  Slicer  bao cao doanh thu theo san pham
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 31")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 31")
         .Caption = Sheet14.Range("D11").Value
     End With
 
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 32")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 32")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 33")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 33")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 34")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 34")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 35")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 35")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 36")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 36")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     '  Slicer  bao cao daonh thu theo nhan vien kinh doanh
 
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 62")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 62")
         .Caption = Sheet14.Range("D11").Value
     End With
 
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 63")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 63")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 64")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 64")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 65")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 65")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 66")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 66")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 67")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 67")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     ' Slicer Bao cao doanh thu theo khach hang
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 25")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 25")
         .Caption = Sheet14.Range("D11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 26")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 26")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 27")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 27")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 28")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 28")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 29")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 29")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 30")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 30")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     ' Slicer Bao cao doanh thu theo thoi gian
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 13")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 13")
         .Caption = Sheet14.Range("D11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 14")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 14")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 15")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 15")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 16")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 16")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 17")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 17")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 18")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 18")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     'Slicer Bao cao san luong ban theo san pham
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 37")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 37")
         .Caption = Sheet14.Range("D11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 38")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 38")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 39")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 39")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 40")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 40")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 41")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 41")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 42")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 42")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     'Slicer Bao cao bien loi nhuan theo san pham
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 43")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 43")
         .Caption = Sheet14.Range("D11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 44")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 44")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 45")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 45")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 46")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 46")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 47")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 47")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 48")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 48")
         .Caption = Sheet14.Range("I11").Value
     End With
 
     'Slicer Bao doanh thu theo don voi thuc hien thuc hien
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_1").Slicers("Nh√≥m VTHH 56")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_1").Slicers("NhÛm VTHH 56")
         .Caption = Sheet14.Range("D11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_2").Slicers("Nh√≥m VTHH 57")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_2").Slicers("NhÛm VTHH 57")
         .Caption = Sheet14.Range("E11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_3").Slicers("Nh√≥m VTHH 58")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_3").Slicers("NhÛm VTHH 58")
         .Caption = Sheet14.Range("F11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_4").Slicers("Nh√≥m VTHH 59")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_4").Slicers("NhÛm VTHH 59")
         .Caption = Sheet14.Range("G11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_5").Slicers("Nh√≥m VTHH 60")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_5").Slicers("NhÛm VTHH 60")
         .Caption = Sheet14.Range("H11").Value
     End With
-    With ActiveWorkbook.SlicerCaches("Slicer_Nh√≥m_VTHH_6").Slicers("Nh√≥m VTHH 61")
+    With ActiveWorkbook.SlicerCaches("Slicer_NhÛm_VTHH_6").Slicers("NhÛm VTHH 61")
         .Caption = Sheet14.Range("I11").Value
     End With
 
-    '√ê?i t√™n ti√™u d?
+    '–?i tÍn tiÍu d?
 
     With SheetTheoDoiBienLoiNhuan
         .Range("Q11").Value = Sheet14.Range("D11").Value
@@ -1222,17 +1047,17 @@ Function LastColumnWithValidData(rng As Range) As String
     Dim ws As Worksheet
     Dim cell As Range
 
-    ' L?y sheet ch?a v√πng d? li?u
+    ' L?y sheet ch?a v˘ng d? li?u
     Set ws = rng.Worksheet
 
-    ' Kh?i t?o c?t cu?i c√πng
+    ' Kh?i t?o c?t cu?i c˘ng
     LastCol = 0
 
-    ' L?p qua t?ng √¥ trong v√πng d? li?u
+    ' L?p qua t?ng Ù trong v˘ng d? li?u
     For Each cell In rng
-        ' Ki?m tra n?u √¥ kh√¥ng tr?ng v√† kh√°c 0
+        ' Ki?m tra n?u Ù khÙng tr?ng v‡ kh·c 0
         If Not IsEmpty(cell.Value) And cell.Value <> 0 Then
-            ' Ki?m tra n?u √¥ c√≥ c√¥ng th?c nhung k?t qu? l√† tr?ng
+            ' Ki?m tra n?u Ù cÛ cÙng th?c nhung k?t qu? l‡ tr?ng
             If cell.HasFormula Then
                 If Trim(cell.Text) <> "" Then
                     If cell.Column > LastCol Then
@@ -1247,7 +1072,7 @@ Function LastColumnWithValidData(rng As Range) As String
         End If
     Next cell
 
-    ' Tr? v? ch? c√°i c?a c?t cu?i c√πng
+    ' Tr? v? ch? c·i c?a c?t cu?i c˘ng
     If LastCol > 0 Then
         LastColumnWithValidData = Split(ws.Cells(1, LastCol).Address, "$")(1)
     Else
@@ -1265,7 +1090,7 @@ End Function
 
 'Auth: Nguyen_Huu_Thanh
 'Date By: 26/06/2024
-'Description: H√†m format ngay lam viec voi ngay lam viec = 0 la ngay nghi le To mau Do
+'Description: H‡m format ngay lam viec voi ngay lam viec = 0 la ngay nghi le To mau Do
 
 Public Function F_FormatNgayLamViec(wSheet As Worksheet)
     BatLimit
@@ -1302,89 +1127,89 @@ End Function
 'Auth: Nguyen_Huu_Thanh
 'Date By: 26/06/2024
 'Description: Sub nay dung de tai su dung code dua du lieu ra  data bao cao ngay, bao cao tuan, bao cao thang, bao cao nam
-' Cua cac menu SO SANH KH-TH THEO √êVKD, SO SANH KH-TH ThEO NVKD, SO SANH KH-TH THEO KHACH HANG
+' Cua cac menu SO SANH KH-TH THEO –VKD, SO SANH KH-TH ThEO NVKD, SO SANH KH-TH THEO KHACH HANG
 
 Sub GenerateQueryAndCallViewSheet(table As String, Nam As Integer, wSheet As Worksheet, Query2 As String)
     Dim Query As String
     Dim ID As LongLong
     Dim dbConn As Object
-
+    
     With wSheet
-        .Select
+    .Select
+    
+    ' Mo ket noi
+    Set dbConn = ConnectToDatabase
+    Call viewSheet(Query2, wSheet, "A1", dbConn)
+    ID = .Range("A1").Value
+    
+    
+    ' Query Bao cao cao ngay B -> M
+    Query = "Select STT, NgayThang, Thu, Tuan, Thang, Quy, KY, KeHoach_Ngay , DoanhSoBan_Ngay , TyLeThucHien, (KeHoach_Ngay - DoanhSoBan_Ngay) As Thieu, NgayLamViec " & _
+    "from " & table & "(" & Nam & ", " & ID & ") BC_Ngay order by STT"
 
-        ' Mo ket noi
-        Set dbConn = ConnectToDatabase
-        Call viewSheet(Query2, wSheet, "A1", dbConn)
-        ID = .Range("A1").Value
+    Call viewSheet(Query, wSheet, "B12", dbConn)
 
+    'Query bao cao tuan >> X -> AC
+    Query = "Select Tuan, (Select top 1 Thang from DM_NgayThang where Year(NgayThang) = " & Nam & " And DM_NgayThang.Tuan = BC_Ngay.Tuan order by NgayThang ) Thang, " & _
+    "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan,  " & _
+    " Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
+    "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
+    "from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
+    "Group by Tuan "
 
-        ' Query Bao cao cao ngay B -> M
-        Query = "Select STT, NgayThang, Thu, Tuan, Thang, Quy, KY, KeHoach_Ngay , DoanhSoBan_Ngay , TyLeThucHien, (KeHoach_Ngay - DoanhSoBan_Ngay) As Thieu, NgayLamViec " & _
-        "from " & table & "(" & Nam & ", " & ID & ") BC_Ngay order by STT"
+    Call viewSheet(Query, wSheet, "X12", dbConn)
 
-        Call viewSheet(Query, wSheet, "B12", dbConn)
+    'Query bao cao thang >> AQ12
+    Query = "Select Thang, Quy, " & _
+    "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
+    "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
+    "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
+    " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
+    "Group by Thang, Quy "
+    Call viewSheet(Query, wSheet, "AQ12", dbConn)
 
-        'Query bao cao tuan >> X -> AC
-        Query = "Select Tuan, (Select top 1 Thang from DM_NgayThang where Year(NgayThang) = " & Nam & " And DM_NgayThang.Tuan = BC_Ngay.Tuan order by NgayThang ) Thang, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan,  " & _
-        " Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        "from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
-        "Group by Tuan "
+    ' Bao cao Quy >> Tu o BJ12
+    Query = "Select Quy, " & _
+    "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
+    "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
+    "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
+    " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
+    "Group by Quy"
 
-        Call viewSheet(Query, wSheet, "X12", dbConn)
+    Call viewSheet(Query, wSheet, "BI12", dbConn)
 
-        'Query bao cao thang >> AQ12
-        Query = "Select Thang, Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
-        "Group by Thang, Quy "
-        Call viewSheet(Query, wSheet, "AQ12", dbConn)
+    ' Bao cao Ky >> Tu o BI20
 
-        ' Bao cao Quy >> Tu o BJ12
-        Query = "Select Quy, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
-        "Group by Quy"
+    Query = "Select Ky, " & _
+    "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
+    "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
+    "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
+    " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
+    "Group by Ky"
+    Call viewSheet(Query, wSheet, "BI20", dbConn)
 
-        Call viewSheet(Query, wSheet, "BI12", dbConn)
+    ' Bao cao Nam >> Tu o BI26
 
-        ' Bao cao Ky >> Tu o BI20
+    Query = "Select '" & Nam & "' As Nam, " & _
+    "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
+    "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
+    "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
+    " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay "
 
-        Query = "Select Ky, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay " & _
-        "Group by Ky"
-        Call viewSheet(Query, wSheet, "BI20", dbConn)
-
-        ' Bao cao Nam >> Tu o BI26
-
-        Query = "Select '" & Nam & "' As Nam, " & _
-        "Sum(Kehoach_Ngay) As Kehoach, Sum(DoanhSoBan_Ngay) As DoanhSoBan, " & _
-        "Case when Sum(KeHoach_Ngay) = 0 Then 0 Else  Sum(DoanhSoBan_Ngay)/Sum(KeHoach_Ngay) end As TyLeThucHien, " & _
-        "Sum(Kehoach_Ngay) - Sum(DoanhSoBan_Ngay) ConThieu " & _
-        " from " & table & "(" & Nam & ", " & ID & ") BC_Ngay "
-
-        Call viewSheet(Query, wSheet, "BI26", dbConn)
-
-        'Dong Ket noi
-        Call CloseDatabaseConnection(dbConn)
-
-        Call formatSyleDataSS(wSheet)
-
+    Call viewSheet(Query, wSheet, "BI26", dbConn)
+    
+   'Dong Ket noi
+    Call CloseDatabaseConnection(dbConn)
+    
+    Call formatSyleDataSS(wSheet)
+    
     End With
 End Sub
 
 'Auth: Nguyen_Huu_Thanh
 'Date By: 26/06/2024
 'Description: Sub nay dung de tai su dung code format
-'Cua cac menu SO SANH KH-TH THEO √êVKD, SO SANH KH-TH ThEO NVKD, SO SANH KH-TH THEO KHACH HANG
+'Cua cac menu SO SANH KH-TH THEO –VKD, SO SANH KH-TH ThEO NVKD, SO SANH KH-TH THEO KHACH HANG
 
 Sub formatSyleDataSS(ws As Worksheet)
     With ws
