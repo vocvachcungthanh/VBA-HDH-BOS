@@ -1,37 +1,77 @@
+Attribute VB_Name = "M_BaoCaoDoanhThuTheo_SP"
 Public Sub VeBieuDo_BaoCao_DoanhThuTheo_SP()
     BatLimit
     F_R_DATA
     Call TiLeChiPhi
     Set wSheet = Sheet2
+    Dim dongCuoi As Integer
+    Dim CotCuoi As String
+    Dim PhamViResize As String
     With wSheet
         .Select
         ActiveWorkbook.RefreshAll
 
         'Nhom 1
-        Call select_data("Chart 46", "Table8[#All]", "Pivot SP")
+       
+        dongCuoi = Sheet26.Range("E6").Value
+    
+        PhamViResize = "K8:L" & dongCuoi + 8
+    
+        Call UpdateChartDataRange(Sheet2, "Chart 46", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 46")
 
         'Nhom 2
-        Call select_data("Chart 36", "Table9[#All]", "Pivot SP")
+        dongCuoi = Sheet26.Range("R6").Value
+    
+        PhamViResize = "X8:Y" & dongCuoi + 8
+        Call UpdateChartDataRange(Sheet2, "Chart 36", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 36")
 
         'Nhom 3
-        Call select_data("Chart 13", "Table7[#All]", "Pivot SP")
+         dongCuoi = Sheet26.Range("AE6").Value
+    
+        PhamViResize = "AK8:AL" & dongCuoi + 8
+        Call UpdateChartDataRange(Sheet2, "Chart 13", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 13")
 
         'Nhom 4
-        Call select_data("Chart 41", "Table10[#All]", "Pivot SP")
+         dongCuoi = Sheet26.Range("AQ6").Value
+    
+        PhamViResize = "AW8:AX" & dongCuoi + 8
+        Call UpdateChartDataRange(Sheet2, "Chart 41", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 41")
 
         'Nhom 5
-        Call select_data("Chart 42", "Table11[#All]", "Pivot SP")
+        dongCuoi = Sheet26.Range("BD6").Value
+        PhamViResize = "BJ8:BK" & dongCuoi + 8
+        Call UpdateChartDataRange(Sheet2, "Chart 42", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 42")
 
         'Nhom 6
-        Call select_data("Chart 44", "Table12[#All]", "Pivot SP")
+        dongCuoi = Sheet26.Range("BQ6").Value
+        PhamViResize = "BW8:BX" & dongCuoi + 8
+        Call UpdateChartDataRange(Sheet2, "Chart 44", Sheet26, PhamViResize)
         Call DinhDangBdNhiet("Chart 44")
+        
+    
     End With
-
+    
+    With Sheet2
+        .txtBoxPhanTrangNhom1.Value = 1
+        .txtBoxPhanTrangNhom2.Value = 1
+        .txtBoxPhanTrangNhom3.Value = 1
+        .txtBoxPhanTrangNhom4.Value = 1
+        .txtBoxPhanTrangNhom5.Value = 1
+        .txtBoxPhanTrangNhom6.Value = 1
+        
+        Call .ResizeNhom1
+        Call .ResizeNhom2
+        Call .ResizeNhom3
+        Call .ResizeNhom4
+        Call .ResizeNhom5
+        Call .ResizeNhom6
+    End With
+    
     Set wSheet = Nothing
     TatLimit
 
@@ -46,12 +86,12 @@ Sub TiLeChiPhi()
         '        Mo ket noi csdl
         Dim dbConn As Object
         Set dbConn = ConnectToDatabase
-        Call viewSheet("exec TiLeChiPhi", Sheet26, "HF4", dbConn)
+        Call viewSheet("exec TiLeChiPhi", Sheet26, "HJ4", dbConn)
 
         'Dong Ket noi
         Call CloseDatabaseConnection(dbConn)
 
-        Columns("GW:GX").Select
+        Columns("HK:HL").Select
         Selection.Style = "Percent"
         Selection.NumberFormat = "0.00%"
     End With
@@ -121,10 +161,5 @@ Public Sub F_RESET_TABLE_PIVOT_SP()
     Set wSheet = Nothing
 End Sub
 
-Public Function KhoiTaoCbbBoxPageSP()
 
-    Dim TongDuLieu As Double
 
-    TongDuLieu = Sheet26.Range("EZ6")
-    Call cbbPage(TongDuLieu, 10, Sheet10.cbbPhanTrangLNNhom1)
-End Function 
